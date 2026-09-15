@@ -1,0 +1,78 @@
+---
+title: "Billboard Graphic"
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+billboard |>
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank",
+    values_drop_na = TRUE
+  ) |>
+  mutate(week = parse_number(week)) |>
+  ggplot(aes(x = week, y = rank, group = track)) +
+  geom_line(alpha = 0.25, color = "steelblue") +
+  scale_y_reverse() +
+  labs(
+    title = "Billboard Hot 100 Song Trajectories (2000)",
+    subtitle = "Most songs drop off within 20 weeks; very few endure past 40 weeks",
+    x = "Week on Chart",
+    y = "Chart Rank (1 is top)",
+    caption = "Source: tidyr::billboard"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+#| echo: false
+#| warning: false
+billboard |>
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank",
+    values_drop_na = TRUE
+  ) |>
+  summarize(
+    weeks_on_chart = n(),
+    hit_number_one = any(rank == 1),
+    .by = c(artist, track)
+  ) |>
+  slice_max(weeks_on_chart, n = 10) |>
+  mutate(
+    song = paste0(track, " - ", artist),
+    song = fct_reorder(song, weeks_on_chart)
+  ) |>
+  ggplot(aes(x = weeks_on_chart, y = song)) +
+  geom_segment(aes(x = 0, xend = weeks_on_chart, y = song, yend = song), color = "gray75", linewidth = 1) +
+  geom_point(aes(color = hit_number_one), size = 6) +
+  geom_text(aes(label = weeks_on_chart), color = "white", size = 2.8, fontface = "bold") +
+  scale_color_manual(
+    values = c("TRUE" = "#e63946", "FALSE" = "#457b9d"),
+    labels = c("TRUE" = "Hit #1", "FALSE" = "Top 10 only"),
+    name = "Peak Rank"
+  ) +
+  labs(
+    title = "Staying Power: 2000's Longest-Charting Songs",
+    subtitle = "Weeks on the Billboard Hot 100 for the top 10 most enduring tracks",
+    x = "Total Weeks on Chart",
+    y = NULL,
+    caption = "Source: tidyr::billboard"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "top",
+    plot.title = element_text(face = "bold")
+  )
+```
+
