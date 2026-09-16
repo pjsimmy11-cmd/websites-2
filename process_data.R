@@ -17,3 +17,5 @@ top_songs <- billboard |>
     song = paste0(track, " - ", artist),
     song = fct_reorder(song, weeks_on_chart)
   )
+
+write_rds(top_songs, file = "clean_data.rds")
